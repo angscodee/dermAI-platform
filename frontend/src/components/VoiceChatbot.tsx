@@ -15,6 +15,7 @@ interface Message {
 
 export function VoiceChatbot({ lang }: VoiceChatbotProps) {
   const t = translations[lang];
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   const [messages, setMessages] = useState<Message[]>([
     { sender: 'bot', text: t.welcome_msg }
   ]);
@@ -38,7 +39,7 @@ export function VoiceChatbot({ lang }: VoiceChatbotProps) {
     setInput('');
 
     try {
-      const res = await fetch('http://localhost:8000/api/chatbot/ask', {
+      const res = await fetch(`${API_BASE}/api/chatbot/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: userMsg, language: lang })

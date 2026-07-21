@@ -1,15 +1,49 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Language, translations } from '../lib/i18n';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { LanguageSelector } from '../components/LanguageSelector';
-import { VoiceChatbot } from '../components/VoiceChatbot';
-import { ThreeDBodyViewer } from '../components/ThreeDBodyViewer';
-import { Activity, Database, Cpu, Layers, Sliders, BarChart3, FileText, Lock, LogOut, CheckCircle2, AlertTriangle, Upload, Image as ImageIcon, Sparkles, Filter, ShieldCheck, HelpCircle, Box, Search, Play, Trophy, FlaskConical, Stethoscope, Globe, Info, SlidersHorizontal, GitCommit, LineChart as LineChartIcon, PieChart, Check, Network, UserCheck } from 'lucide-react';
+import { Activity, Database, Cpu, Layers, Sliders, BarChart3, FileText, Lock, LogOut, CheckCircle2, AlertTriangle, Upload, Image as ImageIcon, Sparkles, Filter, ShieldCheck, HelpCircle, Box, Search, Play, Trophy, FlaskConical, Stethoscope, Globe, Info, SlidersHorizontal, GitCommit, LineChart as LineChartIcon, PieChart, Check, Network, UserCheck, MessageSquare } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine, ScatterChart, Scatter } from 'recharts';
 
+// Heavy components loaded only when needed (code-split, no SSR)
+const VoiceChatbot = dynamic(() => import('../components/VoiceChatbot').then(m => ({ default: m.VoiceChatbot })), {
+  ssr: false,
+  loading: () => <div className="h-[600px] bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />,
+});
+const ThreeDBodyViewer = dynamic(() => import('../components/ThreeDBodyViewer').then(m => ({ default: m.ThreeDBodyViewer })), {
+  ssr: false,
+  loading: () => <div className="h-96 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />,
+});
+
+// Minimizable chatbot panel wrapper
+function ChatbotPanel({ lang }: { lang: Language }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="sticky top-24 w-full">
+      {/* Toggle button — always visible */}
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors mb-2"
+      >
+        <div className="flex items-center space-x-2">
+          <MessageSquare className="w-4 h-4 text-teal-500" />
+          <span>Asistente IA</span>
+        </div>
+        <span className="text-slate-400">{open ? '▲ Minimizar' : '▼ Abrir'}</span>
+      </button>
+
+      {/* Collapsible body */}
+      {open && <VoiceChatbot lang={lang} />}
+    </div>
+  );
+}
+
 export default function Home() {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
   const [lang, setLang] = useState<Language>('es');
   const [darkMode, setDarkMode] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -80,6 +114,7 @@ export default function Home() {
   const [tuningData, setTuningData] = useState<any>(null);
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [backendStatus, setBackendStatus] = useState<'waking' | 'ready' | 'error'>('waking');
 
   const t = translations[lang];
 
@@ -91,17 +126,28 @@ export default function Home() {
     }
   }, [darkMode]);
 
+  // Warmup ping — fires on page load to wake Render from cold start
+  // before the user even types their password. Retries every 8s until ready.
+  useEffect(() => {
+    let attempts = 0;
+    const ping = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/`, { method: 'GET' });
+        if (res.ok) { setBackendStatus('ready'); return; }
+      } catch { /* still waking */ }
+      attempts++;
+      if (attempts < 6) setTimeout(ping, 8000); // retry up to ~48s
+      else setBackendStatus('error');
+    };
+    ping();
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username === 'admin' && password === 'admin123') {
       setIsAuthenticated(true);
       setAuthError('');
-      fetchEDA();
-      fetchWaterfall();
-      fetchAblation();
-      fetchPatientRisk();
-      fetchConcordance();
-      runEnsembleSimulation();
+      // Defer API calls — data loads lazily when user navigates to each tab
     } else {
       setAuthError(t.invalid_login);
     }
@@ -279,8 +325,6 @@ export default function Home() {
     setLoading(false);
   };
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
   const downloadReport = async (format: 'pdf' | 'word' | 'excel') => {
     try {
       const diag = predictionResult ? encodeURIComponent(predictionResult.diagnosis) : encodeURIComponent('Maligno / Enfermo');
@@ -408,8 +452,29 @@ export default function Home() {
             </button>
           </form>
 
-          <div className="pt-2 text-center border-t border-slate-800">
-            <span className="text-[10px] text-slate-400">ISIC 2024 1st Place Ensemble Architecture & Nature 2025 Standard</span>
+          <div className="pt-2 text-center border-t border-slate-800 space-y-1.5">
+            {/* Backend status indicator */}
+            <div className="flex items-center justify-center space-x-2">
+              {backendStatus === 'waking' && (
+                <>
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-[10px] text-amber-400 font-medium">Servidor iniciando (Render cold start ~20s)...</span>
+                </>
+              )}
+              {backendStatus === 'ready' && (
+                <>
+                  <span className="inline-block w-2 h-2 rounded-full bg-teal-400" />
+                  <span className="text-[10px] text-teal-400 font-medium">Servidor listo</span>
+                </>
+              )}
+              {backendStatus === 'error' && (
+                <>
+                  <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
+                  <span className="text-[10px] text-red-400 font-medium">Backend sin respuesta — reintentando...</span>
+                </>
+              )}
+            </div>
+            <span className="text-[10px] text-slate-500">ISIC 2024 1st Place Ensemble Architecture & Nature 2025 Standard</span>
           </div>
         </div>
       </div>
@@ -1321,9 +1386,9 @@ export default function Home() {
           )}
         </div>
 
-        {/* Sidebar Chatbot Area (1 Col) - Responsivo */}
+        {/* Sidebar Chatbot Area (1 Col) - Minimizable */}
         <div className="lg:col-span-1 w-full">
-          <VoiceChatbot lang={lang} />
+          <ChatbotPanel lang={lang} />
         </div>
       </div>
 
