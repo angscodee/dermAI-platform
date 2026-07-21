@@ -125,7 +125,7 @@ export default function Home() {
       formData.append('selected_model', selectedModel);
       formData.append('threshold', sensitivityThreshold.toString());
 
-      const res = await fetch('http://localhost:8000/api/predict/analyze', {
+      const res = await fetch(`${API_BASE}/api/predict/analyze`, {
         method: 'POST',
         body: formData,
       });
@@ -140,7 +140,7 @@ export default function Home() {
   const runEnsembleSimulation = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/ensemble/simulate', {
+      const res = await fetch(`${API_BASE}/api/ensemble/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -167,7 +167,7 @@ export default function Home() {
 
   const fetchEDA = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/eda/summary');
+      const res = await fetch(`${API_BASE}/api/eda/summary`);
       const data = await res.json();
       setEdaData(data);
     } catch (e) {
@@ -177,7 +177,7 @@ export default function Home() {
 
   const fetchWaterfall = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/eda/waterfall-correlations');
+      const res = await fetch(`${API_BASE}/api/eda/waterfall-correlations`);
       const data = await res.json();
       setWaterfallData(data);
     } catch (e) {
@@ -187,7 +187,7 @@ export default function Home() {
 
   const fetchAblation = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/eda/ablation-study');
+      const res = await fetch(`${API_BASE}/api/eda/ablation-study`);
       const data = await res.json();
       setAblationData(data);
     } catch (e) {
@@ -197,7 +197,7 @@ export default function Home() {
 
   const fetchPatientRisk = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/eda/patient-risk-stratification');
+      const res = await fetch(`${API_BASE}/api/eda/patient-risk-stratification`);
       const data = await res.json();
       setPatientRiskData(data);
     } catch (e) {
@@ -207,7 +207,7 @@ export default function Home() {
 
   const fetchConcordance = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/eda/validation-concordance');
+      const res = await fetch(`${API_BASE}/api/eda/validation-concordance`);
       const data = await res.json();
       setConcordanceData(data);
     } catch (e) {
@@ -218,7 +218,7 @@ export default function Home() {
   const runTraining = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/training/run', {
+      const res = await fetch(`${API_BASE}/api/training/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ epochs: 10, batch_size: 32 })
@@ -234,7 +234,7 @@ export default function Home() {
   const runCV = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/cross-validation/run', {
+      const res = await fetch(`${API_BASE}/api/cross-validation/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ n_splits: 5, model_name: 'DenseNet121_Attention' })
@@ -250,7 +250,7 @@ export default function Home() {
   const runTuning = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/tuning/run', {
+      const res = await fetch(`${API_BASE}/api/tuning/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model_name: 'DenseNet121_Attention', trials: 5 })
@@ -266,7 +266,7 @@ export default function Home() {
   const runStats = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/statistical/run-all', {
+      const res = await fetch(`${API_BASE}/api/statistical/run-all`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model_a_name: 'DenseNet121_Attention', model_b_name: 'ResNet50' })
@@ -279,6 +279,8 @@ export default function Home() {
     setLoading(false);
   };
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
   const downloadReport = async (format: 'pdf' | 'word' | 'excel') => {
     try {
       const diag = predictionResult ? encodeURIComponent(predictionResult.diagnosis) : encodeURIComponent('Maligno / Enfermo');
@@ -286,7 +288,7 @@ export default function Home() {
       const modelName = predictionResult ? encodeURIComponent(predictionResult.selected_model) : encodeURIComponent('DenseNet121_Attention');
       const imgPath = predictionResult?.temp_image_path ? `&image_path=${encodeURIComponent(predictionResult.temp_image_path)}` : '';
 
-      const urlPath = `http://localhost:8000/api/reports/${format}?diagnosis=${diag}&confidence=${conf}&model_name=${modelName}${imgPath}`;
+      const urlPath = `${API_BASE}/api/reports/${format}?diagnosis=${diag}&confidence=${conf}&model_name=${modelName}${imgPath}`;
 
       const res = await fetch(urlPath, { method: 'GET' });
       const blob = await res.blob();
@@ -300,19 +302,29 @@ export default function Home() {
       a.remove();
     } catch (e) {
       console.error(e);
-      window.open(`http://localhost:8000/api/reports/${format}`, '_blank');
+      window.open(`${API_BASE}/api/reports/${format}`, '_blank');
     }
   };
 
-  const openReportPreview = () => {
-    const diag = predictionResult ? encodeURIComponent(predictionResult.diagnosis) : encodeURIComponent('Maligno / Enfermo');
-    const conf = predictionResult ? predictionResult.confidence_percent : 94.20;
-    const modelName = predictionResult ? encodeURIComponent(predictionResult.selected_model) : encodeURIComponent('DenseNet121_Attention');
-    const imgPath = predictionResult?.temp_image_path ? `&image_path=${encodeURIComponent(predictionResult.temp_image_path)}` : '';
+  const openReportPreview = async () => {
+    try {
+      setLoading(true);
+      const diag = predictionResult ? encodeURIComponent(predictionResult.diagnosis) : encodeURIComponent('Maligno / Enfermo');
+      const conf = predictionResult ? predictionResult.confidence_percent : 94.20;
+      const modelName = predictionResult ? encodeURIComponent(predictionResult.selected_model) : encodeURIComponent('DenseNet121_Attention');
+      const imgPath = predictionResult?.temp_image_path ? `&image_path=${encodeURIComponent(predictionResult.temp_image_path)}` : '';
 
-    const urlPath = `http://localhost:8000/api/reports/pdf?diagnosis=${diag}&confidence=${conf}&model_name=${modelName}${imgPath}`;
-    setReportPreviewUrl(urlPath);
-    setShowReportModal(true);
+      const urlPath = `${API_BASE}/api/reports/pdf?diagnosis=${diag}&confidence=${conf}&model_name=${modelName}${imgPath}`;
+      const res = await fetch(urlPath);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      setReportPreviewUrl(blobUrl);
+      setShowReportModal(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -343,7 +355,6 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-2">
               <LanguageSelector lang={lang} setLang={setLang} />
-              <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
             </div>
           </div>
 
