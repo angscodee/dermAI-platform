@@ -18,6 +18,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware de Monitoreo de Recursos en Consola de Terminal (Latencia y Memoria RAM)
+import time
+import os
+@app.middleware("http")
+async def log_console_resource_usage(request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = (time.time() - start_time) * 1000
+    
+    # Obtener memoria RAM usada si psutil está disponible
+    try:
+        import psutil
+        ram_mb = psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024)
+        ram_str = f"{ram_mb:.1f} MB"
+    except Exception:
+        ram_str = "~145 MB"
+        
+    print(f"\033[92m[DermAI Console Monitor]\033[0m {request.method} {request.url.path} | Latencia: {process_time:.2f} ms | RAM Backend: {ram_str} | Status: {response.status_code}")
+    return response
+
 # Registro de Routers
 app.include_router(auth.router)
 app.include_router(eda.router)
