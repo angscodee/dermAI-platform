@@ -497,12 +497,13 @@ export default function Home() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 text-center hover:border-teal-500 transition-colors bg-slate-50 dark:bg-slate-900 cursor-pointer relative overflow-hidden">
+                  <label htmlFor="file-upload" className="block border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 text-center hover:border-teal-500 transition-colors bg-slate-50 dark:bg-slate-900 cursor-pointer relative overflow-hidden">
                     <input
+                      id="file-upload"
                       type="file"
                       accept="image/*"
                       onChange={handleFileChange}
-                      className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                      className="hidden"
                     />
                     {previewUrl ? (
                       <div className="space-y-2">
@@ -520,7 +521,7 @@ export default function Home() {
                         <p className="text-[10px] text-slate-400 mt-1">Soporta JPG, PNG, JPEG</p>
                       </>
                     )}
-                  </div>
+                  </label>
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Modelo de Red Neuronal:</label>
