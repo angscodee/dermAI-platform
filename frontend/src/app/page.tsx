@@ -317,12 +317,29 @@ export default function Home() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900 p-4">
-        <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-slate-700">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-2">
-              <Activity className="w-6 h-6 text-teal-600 dark:text-teal-400" />
-              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">DermAI Platform</h1>
+      <div className="min-h-screen relative flex items-center justify-center bg-slate-950 p-4 overflow-hidden">
+        {/* Background Biomedical Image Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity scale-105 transition-transform duration-1000"
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/90 to-teal-950/60" />
+
+        {/* Ambient Glow Orbs */}
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Glassmorphism Card */}
+        <div className="relative w-full max-w-md backdrop-blur-xl bg-slate-900/80 rounded-2xl shadow-2xl p-8 border border-slate-700/60 space-y-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 bg-teal-500/20 rounded-xl border border-teal-500/30">
+                <Activity className="w-6 h-6 text-teal-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-100 tracking-wide">DermAI Platform</h1>
+                <p className="text-[10px] text-teal-400 font-medium uppercase tracking-wider">AI Medical Intelligence</p>
+              </div>
             </div>
             <div className="flex items-center space-x-2">
               <LanguageSelector lang={lang} setLang={setLang} />
@@ -330,41 +347,59 @@ export default function Home() {
             </div>
           </div>
 
-          <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-4">{t.login_title}</h2>
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-slate-100">{t.login_title}</h2>
+            <p className="text-xs text-slate-400">Ingresa con tus credenciales medicas para acceder al modulo de diagnostico.</p>
+          </div>
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">{t.username}</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5 flex items-center space-x-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-teal-400" />
+                <span>{t.username}</span>
+              </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-950/80 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none transition-all text-xs"
+                placeholder="admin"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">{t.password}</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5 flex items-center space-x-1.5">
+                <Lock className="w-3.5 h-3.5 text-teal-400" />
+                <span>{t.password}</span>
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-950/80 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none transition-all text-xs"
+                placeholder="••••••••"
               />
             </div>
 
             {authError && (
-              <p className="text-xs text-red-500 font-medium">{authError}</p>
+              <div className="p-2.5 rounded-lg bg-red-950/80 border border-red-900 text-red-300 text-xs font-medium flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{authError}</span>
+              </div>
             )}
 
             <button
               type="submit"
-              className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-md transition-colors flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-teal-500/20 transition-all flex items-center justify-center space-x-2"
             >
-              <Lock className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4" />
               <span>{t.login_btn}</span>
             </button>
           </form>
+
+          <div className="pt-2 text-center border-t border-slate-800">
+            <span className="text-[10px] text-slate-400">ISIC 2024 1st Place Ensemble Architecture & Nature 2025 Standard</span>
+          </div>
         </div>
       </div>
     );
@@ -784,7 +819,7 @@ export default function Home() {
                   className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50 flex items-center space-x-1.5"
                 >
                   <Play className="w-3.5 h-3.5" />
-                  <span>{loading ? 'Entrenando...' : 'Iniciar Entrenamiento'}</span>
+                  <span>{loading ? 'Entrenando...' : 'Iniciar'}</span>
                 </button>
               </div>
 
@@ -1282,24 +1317,36 @@ export default function Home() {
 
       {/* Modal de Previsualización en Vivo de PDF */}
       {showReportModal && reportPreviewUrl && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-5xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700">
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-5 h-5 text-teal-600" />
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Previsualizacion del Reporte PDF en Vivo (DermAI)</h3>
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-6xl h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Previsualizacion del Reporte Medico en Vivo (7 Paginas)</h3>
+                  <p className="text-[10px] text-slate-500">Documento Oficial DermAI con Metricas Nature 2025 e Imagenes Integradas</p>
+                </div>
               </div>
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="px-3 py-1.5 text-xs font-semibold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors"
-              >
-                Cerrar Previsualización
-              </button>
+
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-slate-400 font-medium mr-1">Descarga rapida:</span>
+                <button onClick={() => downloadReport('pdf')} className="px-2.5 py-1 text-xs bg-red-600 text-white rounded font-semibold hover:bg-red-700 shadow-sm transition-colors">PDF</button>
+                <button onClick={() => downloadReport('word')} className="px-2.5 py-1 text-xs bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 shadow-sm transition-colors">Word</button>
+                <button onClick={() => downloadReport('excel')} className="px-2.5 py-1 text-xs bg-green-600 text-white rounded font-semibold hover:bg-green-700 shadow-sm transition-colors">Excel</button>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="ml-3 px-3 py-1.5 text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-700"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
-            <div className="flex-1 bg-slate-200 dark:bg-slate-950 p-2">
+            <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-2">
               <iframe
                 src={reportPreviewUrl}
-                className="w-full h-full rounded-lg border-0 shadow-inner"
+                className="w-full h-full rounded-xl border-0 shadow-inner bg-white"
                 title="Previsualización de Reporte PDF"
               />
             </div>
